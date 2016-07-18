@@ -11,15 +11,18 @@ import {
   StyleSheet,
   Text,
   View,
-  ScrollView
+  Dimensions,
+  ScrollView,
+  ListView
 } from 'react-native';
 
 var domoticzUnits = {
-   "UT": { name: "Office", ip4: "192.168.0.232" },
-   "PLC": { name: "Office", ip4: "192.168.0.233" },
-   "CEL": { name: "Office", ip4: "192.168.0.234" },
-   "OFF": { name: "Office", ip4: "192.168.0.235" },
-   "KIT": { name: "Office", ip4: "192.168.0.236" }
+    "UT": { name: "Utility", ip4: "192.168.0.232" },
+    "PLC": { name: "Pipes", ip4: "192.168.0.233" },
+    "CEL": { name: "Cellar", ip4: "192.168.0.234" },
+    "OFF": { name: "Office", ip4: "192.168.0.235" },
+    "KIT": { name: "Kitchen", ip4: "192.168.0.236" },
+    "FRONT": { name: "Front Door", ip4: "192.168.0.221"}
 }
 var scenes = [
   { name: 'Nighttime', action: 'Off', cmds: [ { unit: "UT", cmdIdx: 6 }, { unit: "PLC", cmdIdx: 6 }, { unit: "CEL", cmdIdx: 6 }, { unit: "OFF", cmdIdx: 6 }, { unit: "KIT", cmdIdx: 6 } ] },
@@ -48,25 +51,63 @@ var scenes = [
   { name: 'Tram Bed', action: 'Mood', cmds: [ { unit: "PLC", cmdIdx: 34 } ] },
   { name: 'Tram Bed', action: 'Off', cmds: [ { unit: "PLC", cmdIdx: 35 } ] },
   { name: 'Guest', action: 'Mood', cmds: [ { unit: "PLC", cmdIdx: 17 }, { unit: "PLC", cmdIdx: 15 } ] },
-  { name: 'Guest', action: 'Off', cmds: [ { unit: "PLC", cmdIdx: 16 }, { unit: "PLC", cmdIdx: 13 } ] }
+  { name: 'Guest', action: 'Off', cmds: [ { unit: "PLC", cmdIdx: 16 }, { unit: "PLC", cmdIdx: 13 } ] },
+  { name: 'Door Lock', action: 'Main', cmds: [ { unit: "FRONT", cmdStr: 'main-unlock' } ] },
+  { name: 'Door Lock', action: 'Inner', cmds: [ { unit: "FRONT", cmdStr: 'inner-unlock' } ] }
 ]
+
+// var winWidth = Dimensions.get('window').width - 20
+// var squares = [1, 2, 3, 4, 5, 6, 7, 8]
+// var ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
 var SimpleHomeControl = React.createClass({
   _handlePress: function(scenesIdx, actionIdx) {
     var action = sceneList[scenesIdx].actions[actionIdx];
     for (var cmdsIdx = 0; cmdsIdx < action.cmds.length; cmdsIdx++) {
-      var cmd = action.cmds[cmdsIdx]
+      var cmd = action.cmds[cmdsIdx];
       if (!(cmd.unit in domoticzUnits))
         continue;
       var ip = domoticzUnits[cmd.unit].ip4;
-      var cmdIdx = cmd.cmdIdx;
-      var cmdUrl = 'http://' + ip + '/json.htm?type=command&param=switchscene&idx=' + cmdIdx + '&switchcmd=On'
-      console.log("Requesting " + cmdUrl)
-      fetch(cmdUrl)
-        .catch((error) => {
-          console.log("Error sending command " + error);
-        });
+      var cmdUrl = "";
+      if ('cmdIdx' in cmd) {
+        var cmdIdx = cmd.cmdIdx;
+        cmdUrl = 'http://' + ip + '/json.htm?type=command&param=switchscene&idx=' + cmdIdx + '&switchcmd=On';
+      }
+      else if ('cmdStr' in cmd) {
+        cmdUrl = 'http://' + ip + '/' + cmd.cmdStr;
+      }
+      if (cmdUrl !== "") {
+          console.log("Requesting " + cmdUrl);
+          fetch(cmdUrl)
+              .catch((error) => {
+                  console.log("Error sending command " + error);
+              });
+      }
     }
   },
+
+  // getInitialState: function(){
+  //   return { dataSource: ds.cloneWithRows(squares) }
+  // },
+  
+  // renderRow: function(rowData){
+  //   return <View style={ styles.square }>
+  //             <View style={ styles.s }></View>
+  //             <Text>{ rowData }</Text>
+  //           </View>
+  // },
+  
+  // renderTHEY: function() {
+  //
+  //   return (
+  //     <ListView
+  //     contentContainerStyle={{ justifyContent: 'center', flexDirection: 'row', flexWrap: 'wrap', marginLeft:10, marginRight:10 }}
+  //     dataSource={ this.state.dataSource }
+  //     renderRow={ this.renderRow }
+  //     />
+  //   );
+  // },
+
   render: function() {
     var renderThis = this;
     sceneList = [];
@@ -90,6 +131,10 @@ var SimpleHomeControl = React.createClass({
       }
       lastSceneName = scene.name;
     }
+    var winWidth = Dimensions.get('window').width - 20;
+    var leftColWidth = winWidth / 3;
+    var buttonsTotalWidth = winWidth - leftColWidth;
+    var buttonWidth = buttonsTotalWidth / 3 - 10;
     // Balance lengths of actions
     // for (var i = 0; i < sceneList.length; i++){
     //   for (var j = 0; j < maxActionListLen-sceneList[i].actions.length; j++)
@@ -98,7 +143,7 @@ var SimpleHomeControl = React.createClass({
     return (
       <View style={{ justifyContent: 'center', alignItems: 'center',
            backgroundColor: '#F5FCFF' }}>
-        <Text style={{ fontSize: 30, textAlign: 'center', margin: 10 }}>
+        <Text style={{ fontSize: 30, textAlign: 'center', margin: 4, fontWeight: 'bold' }}>
           8 Dick Place
         </Text>
 
@@ -108,28 +153,32 @@ var SimpleHomeControl = React.createClass({
             sceneList.map(function(scene, scenesIdx) {
               return(
                 <View key={scenesIdx} style={{flexDirection: 'row', justifyContent: 'flex-start', 
-                      paddingLeft: 12, paddingTop: 6, paddingBottom: 6,
-                      backgroundColor: 'skyblue', borderWidth: 1, borderColor: "lightgray", 
+                      paddingLeft: 12, paddingTop: 0, paddingBottom: 0,
+                      borderWidth: 1, borderColor: "#ffffff",
                       alignItems:"flex-start", flexWrap: "nowrap" }}>
-                  <Text style={{fontSize: 20, color: 'black', alignSelf: "auto", minWidth: 140 }}>{scene.name}</Text>
+                  <Text style={{fontSize: 20, color: '#404040', width: leftColWidth,
+                                fontWeight: 'bold'}}>
+                      {scene.name}
+                  </Text>
                   {
                     scene.actions.map(function(action, actionIdx) {
                       if ("action" in action){
                         return(
-                          <View key={actionIdx} style={{paddingRight:18, minWidth: 20}}>
+      // <ListView
+      // contentContainerStyle={{ justifyContent: 'center', flexDirection: 'row', flexWrap: 'wrap', marginLeft:10, marginRight:10 }}
+      // dataSource={ renderThis.state.dataSource }
+      // renderRow={ renderThis.renderRow }
+      // />
+                          <View key={actionIdx}>
                             <Button
-                              style={{fontSize: 20, color: 'blue', textDecorationLine: "underline"}}
+                              containerStyle={{margin: 2, padding:1, overflow:'hidden', borderRadius:3,
+                                    backgroundColor: '#80F6FF', borderColor:'#606060', borderWidth:1}}
+                              style={{width: buttonWidth, fontSize: 20, color: '#404040'}}
                               styleDisabled={{color: 'red'}}
                               onPress={() => renderThis._handlePress(scenesIdx, actionIdx)}>
                               {action.action}
                             </Button>
                           </View>
-                        )
-                      }
-                      else
-                      {
-                        return(
-                          <View key={actionIdx} style={{padding:5, backgroundColor:'green', minWidth: 20}}/>
                         )
                       }
                     })
@@ -145,7 +194,17 @@ var SimpleHomeControl = React.createClass({
 });
 
 const styles = StyleSheet.create({
+  // square: {
+  //   margin: 10,
+  //   alignItems: 'center'
+  // },
+  // s: {
+  //   backgroundColor: '#ededed',
+  //   width: winWidth / 3 - 20,
+  //   // height: winWidth / 5 - 20,
+  //   flex:1,
+  //   alignSelf: 'center'
+  // }
 });
 
 AppRegistry.registerComponent('SimpleHomeControl', () => SimpleHomeControl);
-

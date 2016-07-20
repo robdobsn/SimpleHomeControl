@@ -40,7 +40,7 @@ var scenes = [
   { name: 'Master', action: 'Mood', cmds: [ { unit: "PLC", cmdIdx: 32 }, { unit: "PLC", cmdIdx: 29 } ] },
   { name: 'Master', action: 'Off', cmds: [ { unit: "PLC", cmdIdx: 33 }, { unit: "PLC", cmdIdx: 31 } ] },
   { name: 'Office', action: 'Mood', cmds: [ { unit: "PLC", cmdIdx: 7 }, { unit: "OFF", cmdIdx: 7 }, { unit: "KIT", cmdIdx: 7 } ] },
-  { name: 'Office', action: 'Rob Area', cmds: [ { unit: "PLC", cmdIdx: 12 }, { unit: "OFF", cmdIdx: 9 }, { unit: "KIT", cmdIdx: 12 } ] },
+  { name: 'Office', action: "Rob's", cmds: [ { unit: "PLC", cmdIdx: 12 }, { unit: "OFF", cmdIdx: 9 }, { unit: "KIT", cmdIdx: 12 } ] },
   { name: 'Office', action: 'Off', cmds: [ { unit: "PLC", cmdIdx: 8 }, { unit: "OFF", cmdIdx: 8 }, { unit: "KIT", cmdIdx: 8 } ] },
   { name: 'Outside', action: 'On', cmds: [ { unit: "UT", cmdIdx: 1 }, { unit: "CEL", cmdIdx: 1 } ] },
   { name: 'Outside', action: 'Off', cmds: [ { unit: "UT", cmdIdx: 2 }, { unit: "CEL", cmdIdx: 2 } ] },
@@ -172,7 +172,7 @@ var SimpleHomeControl = React.createClass({
                           <View key={actionIdx}>
                             <Button
                               containerStyle={{margin: 2, padding:1, overflow:'hidden', borderRadius:3,
-                                    backgroundColor: '#80F6FF', borderColor:'#606060', borderWidth:1}}
+                                    backgroundColor: '#EDECDB', borderColor:'#606060', borderWidth:1}}
                               style={{width: buttonWidth, fontSize: 20, color: '#404040'}}
                               styleDisabled={{color: 'red'}}
                               onPress={() => renderThis._handlePress(scenesIdx, actionIdx)}>
